@@ -17,9 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from polls.views import QuestionList
+from polls.views import QuestionViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/',include("polls.urls")),
+    path('api/v1/',include("polls.urls.v1")),
 ]

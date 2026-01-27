@@ -25,7 +25,7 @@ class VotingServiceTests(TestCase):
         )
 
     def test_vote_requires_authentication(self):
-        url = reverse("choices-vote", args=[self.choice.id])
+        url = reverse("choice-vote", args=[self.choice.id])
 
         response = self.client.post(url)
 
