@@ -61,7 +61,7 @@ class ChoiceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class QuestionList(viewsets.ModelViewSet):
+class QuestionViewSet(viewsets.ModelViewSet):
     """
         Contract-driven ViewSet for Questions.
         Exposes list + retrieve only.
