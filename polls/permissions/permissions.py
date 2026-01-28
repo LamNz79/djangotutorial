@@ -1,11 +1,12 @@
 # polls/permissions.py
 
 from polls.permissions.rbac import HasRole
+from polls.security.roles import Roles
 
 
 class IsVoter(HasRole):
-    required_roles = {"voter"}
+    required_roles = {Roles.VOTER}
 
 
 class IsModerator(HasRole):
-    required_roles = {"moderator"}
+    required_roles = {Roles.MODERATOR}

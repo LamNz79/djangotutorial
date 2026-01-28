@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from polls.domain.voting.errors import VotingError
 from polls.models import Choice, Question
 from polls.permissions.abac import CanVote
 from polls.permissions.permissions import IsVoter, IsModerator
@@ -34,7 +35,7 @@ class ChoiceViewSet(viewsets.ModelViewSet):
             choice = vote(pk)
         except ChoiceNotFound:
             return Response(
-                {"error": "choice_not_found"},
+                {"error": VotingError.CHOICE_NOT_FOUND},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -47,12 +48,12 @@ class ChoiceViewSet(viewsets.ModelViewSet):
             choice = unvote(pk)
         except ChoiceNotFound:
             return Response(
-                {"error": "choice_not_found"},
+                {"error": VotingError.CHOICE_NOT_FOUND},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except InvalidVoteState:
             return Response(
-                {"error": "invalid_vote_state"},
+                {"error": VotingError.INVALID_VOTE_STATE},
                 status=status.HTTP_409_CONFLICT,
             )
 
