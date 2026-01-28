@@ -9,6 +9,7 @@ from polls.domain.voting.errors import VotingError
 from polls.models import Choice, Question
 from polls.permissions.abac import CanVote
 from polls.permissions.permissions import IsVoter, IsModerator
+from polls.security.policy.voting import can_vote
 from polls.serializers import QuestionSerializers, ChoiceSerializer
 from polls.services.voting import vote, ChoiceNotFound, unvote, InvalidVoteState
 
@@ -30,16 +31,24 @@ class ChoiceViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     @action(detail=True, methods=["POST"])
-    def vote(self, request, pk: int) -> Response:
-        try:
-            choice = vote(pk)
-        except ChoiceNotFound:
+    def vote(self, request, pk=None):
+        choice = self.get_object()
+
+        decision = can_vote(
+            request=request,
+            view=self,
+            choice=choice,
+        )
+
+        if not decision.allowed:
             return Response(
-                {"error": VotingError.CHOICE_NOT_FOUND},
-                status=status.HTTP_404_NOT_FOUND,
+                {"error": decision.reason},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = ChoiceSerializer(choice)
+        # ✅ Business logic (unchanged)
+        res = vote(choice.id)
+        serializer = ChoiceSerializer(res)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"])
