@@ -2,10 +2,12 @@ from django.db.models.aggregates import Sum
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
 from polls.models import Choice, Question
-from polls.permissions import IsStaffUser
+from polls.permissions.abac import CanVote
+from polls.permissions.permissions import IsVoter, IsModerator
 from polls.serializers import QuestionSerializers, ChoiceSerializer
 from polls.services.voting import vote, ChoiceNotFound, unvote, InvalidVoteState
 
@@ -21,13 +23,10 @@ class ChoiceViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == "vote":
-            return [IsAuthenticated()]
+            return [IsVoter(), CanVote()]
         elif self.action == "unvote":
-            permission_classes = [IsStaffUser]
-        else:
-            permission_classes = [AllowAny]
-
-        return [permission() for permission in permission_classes]
+            return [IsModerator()]
+        return super().get_permissions()
 
     @action(detail=True, methods=["POST"])
     def vote(self, request, pk: int) -> Response:
