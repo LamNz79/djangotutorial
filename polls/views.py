@@ -9,6 +9,8 @@ from polls.domain.voting.errors import VotingError
 from polls.models import Choice, Question
 from polls.permissions.abac import CanVote
 from polls.permissions.permissions import IsVoter, IsModerator
+from polls.security.actions import Actions
+from polls.security.audit import log_audit_event
 from polls.security.policy.voting import can_vote
 from polls.serializers import QuestionSerializers, ChoiceSerializer
 from polls.services.voting import vote, ChoiceNotFound, unvote, InvalidVoteState
@@ -39,7 +41,13 @@ class ChoiceViewSet(viewsets.ModelViewSet):
             view=self,
             choice=choice,
         )
-
+        log_audit_event(
+            user_id=request.user.id,
+            action=Actions.VOTE,
+            resource=f"choice: {choice.pk} - {choice.choice_text}",
+            allowed=decision.allowed,
+            reason=decision.reason,
+        )
         if not decision.allowed:
             return Response(
                 {"error": decision.reason},

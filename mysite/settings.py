@@ -140,3 +140,35 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
 ]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "audit_formatter": {
+            "format": (
+                "[AUDIT] user=%(user_id)s "
+                "action=%(action)s "
+                "resource=%(resource)s "
+                "allowed=%(allowed)s "
+                "reason=%(reason)s"
+            )
+        },
+    },
+
+    "handlers": {
+        "audit_console": {
+            "class": "logging.StreamHandler",
+            "formatter": "audit_formatter",
+        },
+    },
+
+    "loggers": {
+        "audit": {
+            "handlers": ["audit_console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
