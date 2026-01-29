@@ -2,6 +2,42 @@
 
 A production-ready Django REST API application built as an extended version of the official Django tutorial. This project demonstrates a polling application with advanced features including role-based access control (RBAC), attribute-based access control (ABAC), audit logging, and comprehensive security policies.
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [📋 Prerequisites](#-prerequisites)
+- [🛠️ Installation](#️-installation)
+- [🚦 Running the Application](#-running-the-application)
+- [📚 API Endpoints](#-api-endpoints)
+  - [Authentication](#authentication)
+  - [Questions](#questions)
+  - [Choices (Voting)](#choices-voting)
+  - [Admin Panel](#admin-panel)
+- [🏗️ Project Structure](#️-project-structure)
+- [🔑 Key Architecture Patterns](#-key-architecture-patterns)
+  - [Domain-Driven Design](#domain-driven-design)
+  - [Security Design](#security-design)
+  - [Transaction Safety](#transaction-safety)
+- [🧪 Testing](#-testing)
+- [🛠️ Makefile Commands](#️-makefile-commands)
+- [🔒 Security Configuration](#-security-configuration)
+  - [JWT Authentication](#jwt-authentication)
+  - [Rate Limiting](#rate-limiting)
+  - [CORS Configuration](#cors-configuration)
+- [🌐 Frontend Integration](#-frontend-integration)
+- [📝 Models](#-models)
+  - [Question](#question)
+  - [Choice](#choice)
+- [🔐 Permissions & Roles](#-permissions--roles)
+  - [Roles](#roles)
+  - [Permission Classes](#permission-classes)
+- [📊 Audit Logging](#-audit-logging)
+- [🚧 Development Setup](#-development-setup)
+- [🐛 Known Issues](#-known-issues)
+- [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📚 Resources](#-resources)
+
 ## 🚀 Features
 
 - **RESTful API**: Built with Django REST Framework
