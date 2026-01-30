@@ -5,10 +5,11 @@ from polls.models import Choice, Question
 
 class ChoiceSerializer(serializers.ModelSerializer):
     text = serializers.CharField(source="choice_text")
+    vote_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Choice
-        fields = ["id", "text", "votes"]
+        fields = ["id", "text", "vote_count"]
 
 
 class QuestionSerializers(serializers.ModelSerializer):
