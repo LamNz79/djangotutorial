@@ -1,7 +1,6 @@
 from django.db import transaction
-from django.db.models import F
 
-from polls.models import Choice
+from polls.models import Choice, Vote
 
 
 class ChoiceNotFound(Exception):
@@ -12,29 +11,28 @@ class InvalidVoteState(Exception):
     pass
 
 
-def vote(choice_id: int) -> Choice:
+def vote(*, choice: Choice, user) -> Choice:
+    """
+       Cast a vote for a choice by a user.
+       Single source of truth for vote creation.
+       """
     with transaction.atomic():
-        updated = Choice.objects.filter(pk=choice_id).update(
-            votes=F("votes") + 1
+        vote = Vote(
+            user=user,
+            choice=choice,
+            question=choice.question,
         )
-    if updated == 0:
-        raise ChoiceNotFound
+        vote.full_clean()
+        vote.save()
+        return choice
 
-    return Choice.objects.get(pk=choice_id)
 
-
-def unvote(choice_id: int) -> Choice:
-    with transaction.atomic():
-        updated = Choice.objects.filter(
-            pk=choice_id,
-            votes__gt=0
-        ).update(
-            votes=F("votes") - 1
-        )
-
-    if updated == 0:
-        if not Choice.objects.filter(pk=choice_id).exists():
-            raise ChoiceNotFound
+def unvote(*, choice: Choice, user) -> Choice:
+    deleted, _ = Vote.objects.filter(
+        user=user,
+        choice=choice,
+        question=choice.question,
+    ).delete()
+    if deleted == 0:
         raise InvalidVoteState
-
-    return Choice.objects.get(pk=choice_id)
+    return choice

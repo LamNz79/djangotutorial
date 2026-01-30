@@ -1,4 +1,5 @@
 from django.db.models.aggregates import Count
+from django.db.models.query import Prefetch
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -23,7 +24,11 @@ class ChoiceViewSet(viewsets.ModelViewSet):
     """
 
     def get_object(self) -> Choice:
-        return get_object_or_404(Choice, pk=self.kwargs["pk"])
+        return get_object_or_404(
+            Choice.objects.
+            annotate(vote_count=Count("vote"))
+            .order_by('-vote_count'),
+            pk=self.kwargs["pk"])
 
     def get_permissions(self):
         if self.action == "vote":
@@ -55,14 +60,15 @@ class ChoiceViewSet(viewsets.ModelViewSet):
             )
 
         # ✅ Business logic (unchanged)
-        res = vote(choice.id)
+        res = vote(choice=choice, user=request.user)
         serializer = ChoiceSerializer(res)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"])
     def un_vote(self, request, pk: int) -> Response:
         try:
-            choice = unvote(pk)
+            choice = self.get_object()
+            res = unvote(choice=choice, user=request.user)
         except ChoiceNotFound:
             return Response(
                 {"error": VotingError.CHOICE_NOT_FOUND},
@@ -74,7 +80,7 @@ class ChoiceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        serializer = ChoiceSerializer(choice)
+        serializer = ChoiceSerializer(res)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -89,6 +95,14 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Question.objects
-            .annotate(vote_count=Count("vote"))
-            .order_by("-vote_count")
+            .annotate(total_votes=Count("vote"))
+            .prefetch_related(
+                Prefetch(
+                    "choice_set",
+                    queryset=Choice.objects.annotate(
+                        vote_count=Count("vote"))
+                )
+            )
+            .order_by("-total_votes")
+
         )
