@@ -13,5 +13,6 @@ class CanVote(BasePermission):
 
         return not Vote.objects.filter(
             user=request.user,
+            choice=choice,
             question=choice.question
         ).exists()
