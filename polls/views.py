@@ -1,4 +1,4 @@
-from django.db.models.aggregates import Sum
+from django.db.models.aggregates import Count
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -89,6 +89,6 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Question.objects
-            .annotate(total_votes=Sum("choice__votes"))
-            .prefetch_related("choice_set")
+            .annotate(vote_count=Count("vote"))
+            .order_by("-vote_count")
         )
