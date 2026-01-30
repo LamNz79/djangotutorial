@@ -31,10 +31,6 @@ class Choice(models.Model):
         except IntegrityError:
             return False
 
-    @property
-    def vote_count(self):
-        return self.votes.count()
-
 
 class Vote(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
