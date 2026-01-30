@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -171,4 +171,18 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+SIMPLE_JWT = {
+    # Access tokens (short-lived)
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+
+    # Refresh tokens (long-lived)
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    # Optional but recommended
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+
+    "UPDATE_LAST_LOGIN": True,
 }
