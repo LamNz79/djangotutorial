@@ -3,7 +3,6 @@ from django.db.models.query import Prefetch
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from polls.domain.voting.errors import VotingError
@@ -13,7 +12,7 @@ from polls.permissions.permissions import IsVoter, IsModerator
 from polls.security.actions import Actions
 from polls.security.audit import log_audit_event
 from polls.security.policy.voting import can_vote
-from polls.serializers import QuestionSerializers, ChoiceSerializer
+from polls.serializers import QuestionSerializers, ChoiceSerializer, QuestionCreateSerializer, ChoiceCreateSerializer
 from polls.services.voting import vote, ChoiceNotFound, unvote, InvalidVoteState
 
 
@@ -28,18 +27,30 @@ class ChoiceViewSet(viewsets.ModelViewSet):
             Choice.objects.
             annotate(vote_count=Count("vote"))
             .order_by('-vote_count'),
-            pk=self.kwargs["pk"])
+        )
 
     def get_permissions(self):
         if self.action == "vote":
             return [IsVoter(), CanVote()]
-        elif self.action == "unvote":
+        elif self.action == "un_vote":
             return [IsModerator()]
         return super().get_permissions()
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=False, methods=["POST"])
     def vote(self, request, pk=None):
-        choice = self.get_object()
+        choice_id = request.data.get("choiceId")
+
+        if not choice_id:
+            return Response(
+                {"error": "choice_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        choice = get_object_or_404(
+            Choice.objects
+            .annotate(vote_count=Count("vote")),
+            pk=choice_id,
+        )
 
         decision = can_vote(
             request=request,
@@ -64,10 +75,23 @@ class ChoiceViewSet(viewsets.ModelViewSet):
         serializer = ChoiceSerializer(res)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["POST"])
-    def un_vote(self, request, pk: int) -> Response:
+    @action(detail=False, methods=["POST"])
+    def un_vote(self, request) -> Response:
         try:
-            choice = self.get_object()
+            choice_id = request.data.get("choiceId")
+
+            if not choice_id:
+                return Response(
+                    {"error": "choice_id is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            choice = get_object_or_404(
+                Choice.objects
+                .annotate(vote_count=Count("vote")),
+                pk=choice_id,
+            )
+
             res = unvote(choice=choice, user=request.user)
         except ChoiceNotFound:
             return Response(
@@ -90,7 +114,61 @@ class QuestionViewSet(viewsets.ModelViewSet):
         Exposes list + retrieve only.
     """
     serializer_class = QuestionSerializers
-    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return []
+        elif self.action == "create":
+            return [IsModerator()]
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action in ("create", "create_list"):
+            return QuestionCreateSerializer
+        return QuestionSerializers
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        url_path="create-list"
+
+    )
+    def create_list(self, request):
+        serializer = self.get_serializer(
+            data=request.data,
+            many=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        question = serializer.save()
+        return Response(
+            QuestionSerializers(question, many=True).data,
+            status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="add-choice"
+    )
+    def add_choice(self, request, pk=None):
+        question = self.get_object()
+        serializer = ChoiceCreateSerializer(
+            data=request.data,
+            many=True,
+
+        )
+        serializer.is_valid(raise_exception=True)
+        choices = [
+            Choice(question=question, **item)
+            for item in serializer.validated_data
+        ]
+        Choice.objects.bulk_create(choices)
+        return Response(
+            ChoiceSerializer(
+                Choice.objects.filter(question=question),
+                many=True
+            ).data,
+            status.HTTP_201_CREATED
+        )
 
     def get_queryset(self):
         return (
