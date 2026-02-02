@@ -1,0 +1,16 @@
+meta {
+  name: get vote by id
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base}}/v1/questions/1/my-vote/
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
