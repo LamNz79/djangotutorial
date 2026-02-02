@@ -9,4 +9,5 @@ export interface DjangoQuestion {
     question: string;
     total_votes: number;
     choices: DjangoChoice[];
+    created_date?: string
 }

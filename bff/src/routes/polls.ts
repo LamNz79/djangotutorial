@@ -6,18 +6,17 @@ const router = Router();
 
 router.get('/', async (_req, res) => {
   try {
-    const data = await djangoFetch<DjangoQuestion[]>('/questions/');
-    const polls = data.map((q: DjangoQuestion) => ({
-      id: q.id,
-      question: q.question,
-      totalVotes: q.total_votes,
-      choices: q.choices.map((c: DjangoChoice) => ({
-        id: c.id,
-        text: c.text,
-        votes: c.vote_count,
-      })),
-    }));
-    res.json(polls);
+    const questions = await djangoFetch<DjangoQuestion[]>('/questions/');
+    res.json({
+      data: {
+        questions: questions.map((q) => ({
+          id: q.id,
+          text: q.question,
+          publishedAt: q.created_date,
+          totalVotes: q.total_votes,
+        })),
+      }
+    })
   }
   catch (err) {
     console.error(err);
@@ -26,31 +25,56 @@ router.get('/', async (_req, res) => {
 });
 
 router.get("/:id", async (req: Request, res: Response) => {
-  const pollId = Number(req.params.id);
+  const questionId = Number(req.params.id);
 
-  if (Number.isNaN(pollId)) {
-    return res.status(400).json({ error: "Invalid poll id" });
+  if (Number.isNaN(questionId)) {
+    return res.status(400).json({ error: "Invalid question id" });
   }
 
   try {
-    const poll = await djangoFetch<DjangoQuestion>(`/questions/${pollId}/`);
+    const question = await djangoFetch<DjangoQuestion>(
+      `/questions/${questionId}/`
+    );
+
+    let userVote: { choiceId: number } | null = null;
+    if (req.headers.authorization) {
+      try {
+        const vote = await djangoFetch<{ choice_id: number }>(
+          `/questions/${questionId}/my-vote/`,
+          {
+            headers: {
+              Authorization: req.headers.authorization,
+            },
+          }
+        );
+        userVote = { choiceId: vote.choice_id };
+      }
+      catch (err: any) {
+        userVote = null;
+      }
+    }
 
     res.json({
-      id: poll.id,
-      question: poll.question,
-      totalVotes: poll.total_votes,
-      choices: poll.choices.map((c: any) => ({
-        id: c.id,
-        text: c.text,
-        votes: c.vote_count,
-      })),
+      data: {
+        question: {
+          id: question.id,
+          text: question.question,
+          publishedAt: question.created_date,
+        },
+        choices: question.choices.map((c: DjangoChoice) => ({
+          id: c.id,
+          text: c.text,
+          voteCount: c.vote_count,
+        })),
+        userVote, // Phase 1: aggregation not implemented yet
+      },
     });
   } catch (err: any) {
     if (err.status === 404) {
-      return res.status(404).json({ error: "Poll not found" });
+      return res.status(404).json({ error: "Question not found" });
     }
 
-    console.error("Failed to fetch poll", err);
+    console.error("Failed to fetch question", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
