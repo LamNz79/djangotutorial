@@ -1,12 +1,14 @@
 from django.db.models.aggregates import Count
 from django.db.models.query import Prefetch
+from django.template.defaultfilters import first
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from polls.domain.voting.errors import VotingError
-from polls.models import Choice, Question
+from polls.models import Choice, Question, Vote
 from polls.permissions.abac import CanVote
 from polls.permissions.permissions import IsVoter, IsModerator
 from polls.security.actions import Actions
@@ -143,6 +145,27 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response(
             QuestionSerializers(question, many=True).data,
             status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="my-vote",
+    )
+    def my_vote(self, request, pk=None):
+        """
+        Return the authenticated user's vote for this question.
+        """
+        vote = (Vote.objects.filter(
+            user=request.user,
+            question_id=pk
+        ).only("choice_id").first())
+        if vote is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(
+            {"choice_id": vote.choice_id},
+            status=status.HTTP_200_OK,
+        )
 
     @action(
         detail=True,
