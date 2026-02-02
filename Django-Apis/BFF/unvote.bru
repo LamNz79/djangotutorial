@@ -1,0 +1,23 @@
+meta {
+  name: unvote
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3001/polls/unvote
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "choiceId": 1
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

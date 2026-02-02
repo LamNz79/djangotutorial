@@ -1,0 +1,30 @@
+# --- General / OS ---
+.DS_Store
+.env
+.venv
+*.log
+dist/
+build/
+
+# --- Node.js (Frontend & BFF) ---
+# This ignores node_modules in ANY subfolder
+**/node_modules/
+**/.npm
+**/.eslintcache
+**/.next/
+**/out/
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*$py.class
+**/venv/
+**/env/
+db.sqlite3
+media/
+staticfiles/
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp

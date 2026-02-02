@@ -1,0 +1,25 @@
+meta {
+  name: Create List
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base}}/v1/questions/create_list
+  body: json
+  auth: inherit
+}
+
+body:json {
+  [
+    {
+      "question_text": "whats 1 + 1?",
+      "pub_date": "2026-02-01T10:00:00Z"
+    }
+  ]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,23 @@
+meta {
+  name: vote
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base}}/v1/choices/vote/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "choiceId": 1
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

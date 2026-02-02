@@ -1,0 +1,16 @@
+meta {
+  name: POLLS by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3001/polls/1
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

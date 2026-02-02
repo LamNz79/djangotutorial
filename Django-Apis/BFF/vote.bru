@@ -1,0 +1,23 @@
+meta {
+  name: vote
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:3001/polls/vote
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "choiceId": 1
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
